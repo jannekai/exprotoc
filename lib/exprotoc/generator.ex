@@ -79,7 +79,7 @@ defmodule Exprotoc.Generator do
 
     """
 #{i}defmodule #{name} do
-#{i}  defrecord T, message: HashDict.new
+#{i}  defstruct message: HashDict.new
 #{i}  def encode(msg) do
 #{i}    p = List.foldl get_keys, [], fn(key, acc) ->
 #{i}          fnum = get_fnum key
@@ -102,12 +102,12 @@ defmodule Exprotoc.Generator do
 
 #{i}  def decode(payload) do
 #{i}    m = Exprotoc.Protocol.decode_payload payload, __MODULE__
-#{i}    T.new message: m
+#{i}    %#{name}{message: m}
 #{i}  end
 
-#{i}  def new, do: T.new
+#{i}  def new, do: %#{name}{}
 #{i}  def new(enum) do
-#{i}    new T.new, enum
+#{i}    new new(), enum
 #{i}  end
 #{i}  def new(msg, enum) do
 #{i}    Enum.reduce enum, msg, fn({k, v}, acc) ->
@@ -138,22 +138,22 @@ defmodule Exprotoc.Generator do
 #{i}    f_num = get_fnum key
 #{i}    m = msg.message
 #{i}    m = put_key m, f_num, value
-#{i}    msg.message m
+#{i}    %#{name}{msg | message: m}
 #{i}  end
 #{i}  def delete(msg, key) do
 #{i}    f_num = get_fnum key
 #{i}    m = msg.message
 #{i}    m = HashDict.delete m, f_num
-#{i}    msg.message m
+#{i}    %#{name}{msg | message: m}
 #{i}  end
 
 #{fields_text}#{submodule_text}#{i}end
 
-#{i}defimpl Inspect, for: #{name}.T do
+#{i}defimpl Inspect, for: #{name} do
 #{i}  def inspect(msg, opts), do: Exprotoc.Inspect.inspect(#{name}, msg, opts)
 #{i}end
 
-#{i}defimpl Access, for: #{name}.T do
+#{i}defimpl Access, for: #{name} do
 #{i}  def access(msg, key), do: #{name}.get(msg, key)
 #{i}end
 """
