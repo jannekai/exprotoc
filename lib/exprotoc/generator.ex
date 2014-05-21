@@ -119,8 +119,8 @@ defmodule Exprotoc.Generator do
 #{i}  end
 #{i}  def get(msg, key) when is_atom(key) do
 #{i}    f_num = get_fnum key
-#{i}    m = msg.message
-#{i}    if HashDict.has_key?(m, f_num) do
+#{i}    if has_key(msg, key) do
+#{i}      m = msg.message
 #{i}      if get_ftype(f_num) == :repeated do
 #{i}        elem m[f_num], 1
 #{i}      else
@@ -133,6 +133,11 @@ defmodule Exprotoc.Generator do
 #{i}        get_default f_num
 #{i}      end
 #{i}    end
+#{i}  end
+#{i}  def has_key(msg, key) do
+#{i}    f_num = get_fnum key
+#{i}    m = msg.message
+#{i}    HashDict.has_key?(m, f_num)
 #{i}  end
 #{i}  def put(msg, key, value) do
 #{i}    f_num = get_fnum key
