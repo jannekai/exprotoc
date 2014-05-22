@@ -38,10 +38,9 @@ defmodule Exprotoc.Generator do
       name = fullname
     end
     i = indent level
-    first_field = Enum.at(enum_values, 0) |> elem(1)
-    { acc1, acc2, acc3 } =
-      List.foldl enum_values, { "", "", "" },
-           fn({k, v}, { a1, a2, a3 }) ->
+    { acc1, acc2, acc3, acc4 } =
+      List.foldl enum_values, { "", "", "", [] },
+           fn({k, v}, { a1, a2, a3, a4 }) ->
                enum_atom = to_enum_type k
                a1 = a1 <>
                "#{i}  def to_i({ #{fullname}, :#{enum_atom} }), do: #{v}\n"
@@ -49,13 +48,20 @@ defmodule Exprotoc.Generator do
                "#{i}  def to_symbol(#{v}), do: { #{fullname}, :#{enum_atom} }\n"
                a3 = a3 <>
                "#{i}  def #{enum_atom}, do: { #{fullname}, :#{enum_atom} }\n"
-               { a1, a2, a3 }
+               a4 = [enum_atom|a4]
+               { a1, a2, a3, a4 }
            end
     enum_funs = acc1 <> acc2 <> acc3
+    enum_types = Enum.reverse acc4
+    first_field = Enum.at(enum_types, 0)
+    types = Enum.map_join enum_types, " | ", fn(enum_type) ->
+                                               ":" <> enum_type
+                                             end
     """
 #{i}defmodule #{name} do
+#{i}  @type t :: {#{fullname}, #{types}}
 #{i}  def decode(value), do: to_symbol value
-#{i}  def first(), do: to_symbol #{first_field}
+#{i}  def first(), do: #{first_field}
 #{i}  def to_a({ #{fullname}, atom }), do: atom
 #{i}  def from_a( atom ), do: { #{fullname}, atom }
 #{enum_funs}#{i}end
