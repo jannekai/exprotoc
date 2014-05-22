@@ -250,27 +250,35 @@ defmodule Exprotoc.Generator do
   end
 
   defp do_generate_default_value(:bool, opts) do
-    value = opts[:default]
-    if value == nil do
-      value = false
-    end
-    value
+    generate_default(opts[:default], false)
   end
   defp do_generate_default_value({:enum, name}, opts) do
-    value = if opts[:default] != nil do
-                opts[:default] |> to_enum_type
-              else
-                "first"
-              end
-    Kernel.inspect(name) <> "." <> value
+    Kernel.inspect(name) <> "." <> to_enum_type(generate_default(opts[:default], :first))
   end
-  defp do_generate_default_value(_type, opts) do
+  defp do_generate_default_value(:string, opts) do
+    generate_default(opts[:default], "\"\"")
+  end
+  defp do_generate_default_value(type, opts)
+  when type in [:int32, :int64, :uint32, :uint64, :sint32,
+                :sint64, :fixed32, :fixed64, :sfixed32, :sfixed64] do
+    generate_default(opts[:default], 0)
+  end
+  defp do_generate_default_value(type, opts)
+  when type in [:double, :float] do
+    generate_default(opts[:default], 0.0)
+  end
+  defp do_generate_default_value(type, opts) do
     opts[:default]
   end
   # TODO
-  # add defaults for other types
-  # numbers = 0
-  # string = ""
+  # default for bytes?
+
+  defp generate_default(nil, default) do
+    default
+  end
+  defp generate_default(custom_default, _default) do
+    custom_default
+  end
 
   defp indent(level), do: String.duplicate("  ", level)
 

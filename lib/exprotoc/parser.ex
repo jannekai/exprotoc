@@ -9,7 +9,7 @@ defmodule Exprotoc.Parser do
     { :ok, reg2 } = Regex.compile @line_comment
     text = Regex.replace reg1, text, ""
     text = Regex.replace reg2, text, ""
-    { :ok, list_text } = String.to_char_list text
+    { :ok, list_text } = List.from_char_data text
     { :ok, tokens, _ } = :erl_scan.string(list_text, 1,
                                           { :reserved_word_fun ,
                                             &reserved_words/1 })
