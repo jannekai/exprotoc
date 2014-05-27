@@ -9,14 +9,25 @@ defmodule TestWrapperTest do
   end
 
   test "encode uint32" do
-    t = Proto.Test.Test1.new a: 150
+    t = Proto.Test.Test1.new a: 2147483647
     p = t |> Proto.Test.Test1.encode |> iodata_to_binary
-    assert p == << 8, 150, 1 >>
+    assert p == <<16, 0, 8, 255, 255, 255, 255, 7>>
   end
 
   test "decode uint32" do
-    t = Proto.Test.Test1.decode << 8, 150, 1 >>
-    assert t[:a] == 150
+    t = Proto.Test.Test1.decode <<16, 0, 8, 255, 255, 255, 255, 7>>
+    assert t[:a] == 2147483647
+  end
+
+  test "encode sint64" do
+    t = Proto.Test.Test1.new b: 2147483648
+    p = t |> Proto.Test.Test1.encode |> iodata_to_binary
+    assert p == <<16, 128, 128, 128, 128, 16, 8, 0>>
+  end
+
+  test "decode sint64" do
+    t = Proto.Test.Test1.decode <<16, 128, 128, 128, 128, 16, 8, 0>>
+    assert t[:b] == 2147483648
   end
 
   test "encode enum" do
@@ -38,7 +49,7 @@ defmodule TestWrapperTest do
     outer = Proto.Test.Test3.new c: inner
     assert outer[:c][:a] == 150
     payload = outer |> Proto.Test.Test3.encode |> iodata_to_binary
-    assert payload == << 26, 3, 8, 150, 1 >>
+    assert payload == <<26, 5, 16, 0, 8, 150, 1>>
   end
 
   test "decode nested message" do

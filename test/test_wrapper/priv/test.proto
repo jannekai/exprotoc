@@ -4,7 +4,8 @@ import "other.proto";
 import "another.proto";
 
 message Test1 {
-  required uint32 a = 1;
+  optional uint32 a = 1;
+  optional sint64 b = 2;
 }
 
 message Test2 {

@@ -115,13 +115,13 @@ defmodule Exprotoc.Protocol do
   defp encode_value(:uint32, data), do: encode_varint(data)
   defp encode_value(:uint64, data), do: encode_varint(data)
   defp encode_value(:sint32, data)
-  when data <= 0x80000000
+  when data < 0x80000000
   when data >= -0x7fffffff do
     int = bxor (data <<< 1), (data >>> 31)
     encode_varint int
   end
   defp encode_value(:sint64, data)
-  when data <= 0x8000000000000000
+  when data < 0x8000000000000000
   when data >= -0x7fffffffffffffff do
     int = bxor (data <<< 1), (data >>> 63)
     encode_varint int
@@ -171,8 +171,8 @@ defmodule Exprotoc.Protocol do
   def wire_type(_), do: :custom
 
   defp cast(value, :int32) do
-    if value &&& 0x8000000000000000 != 0 do
-      value - 0x8000000000000000
+    if value &&& 0x80000000 != 0 do
+      value - 0x80000000
     else
       value
     end
