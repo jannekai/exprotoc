@@ -5,7 +5,7 @@ import "another.proto";
 
 message Test1 {
   optional uint32 a = 1;
-  optional sint64 b = 2;
+  optional sint64 b = 2 [default = -5];
 }
 
 message Test2 {

@@ -5,10 +5,11 @@ proto imports messages
 p_enum enum_fields enum_field enum_name enum_value
 p_message message_name
 fields field field_rule field_num field_type field_name
+number
 options option.
 
 Terminals
-';' '=' '{' '}' '[' ']' ',' '.'
+';' '=' '{' '}' '[' ']' ',' '.' '-'
 package default packed message import
 enum atom string integer float var bool true false.
 
@@ -58,13 +59,16 @@ options -> option ',' options : ['$1'|'$3'].
 
 option -> packed '=' true : {packed, true}.
 option -> packed '=' false : {packed, false}.
-option -> default '=' integer : {default, value_of('$3')}.
-option -> default '=' float : {default, value_of('$3')}.
+option -> default '=' '-' number : {default, -1*value_of('$4')}.
+option -> default '=' number : {default, value_of('$3')}.
 option -> default '=' string : {default, value_of('$3')}.
 option -> default '=' var : {default, value_of('$3')}.
 option -> default '=' bool : {default, value_of('$3')}.
 option -> default '=' true : {default, true}.
 option -> default '=' false : {default, false}.
+
+number -> integer : '$1'.
+number -> float : '$1'.
 
 p_enum -> enum enum_name '{' enum_fields '}' : {enum, '$2', '$4'}.
 
