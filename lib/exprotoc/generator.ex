@@ -57,6 +57,7 @@ defmodule Exprotoc.Generator do
     types = Enum.map_join enum_types, " | ", fn(enum_type) ->
                                                ":" <> enum_type
                                              end
+    members = Enum.map_join enum_types, ", ", fn(enum_type) -> ":" <> enum_type end
     """
 #{i}defmodule #{name} do
 #{i}  @type t :: {#{fullname}, #{types}}
@@ -64,6 +65,7 @@ defmodule Exprotoc.Generator do
 #{i}  def first(), do: #{first_field}
 #{i}  def to_a({ #{fullname}, atom }), do: atom
 #{i}  def from_a( atom ), do: { #{fullname}, atom }
+#{i}  def members(), do: [ #{members} ]
 #{enum_funs}#{i}end
 """
   end
