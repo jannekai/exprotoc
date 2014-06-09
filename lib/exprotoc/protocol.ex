@@ -6,7 +6,7 @@ defmodule Exprotoc.Protocol do
 
   @spec decode_payload(binary | list, atom) :: Message.t
   def decode_payload(message, module) when is_list(message) do
-    decode_payload iodata_to_binary(message), module
+    decode_payload IO.iodata_to_binary(message), module
   end
   def decode_payload(payload, module) do
     { message, keys } = decode_payload payload, module, HashDict.new, []
@@ -92,7 +92,7 @@ defmodule Exprotoc.Protocol do
   end
   defp encode_value(field_num, { :message, module }, message) do
     payload = module.encode message
-    size = iodata_length payload
+    size = IO.iodata_length payload
     [ encode_varint((field_num <<< 3) ||| 2), encode_varint(size) , payload ]
   end
   defp encode_value(field_num, type, data) do

@@ -10,7 +10,7 @@ defmodule TestWrapperTest do
 
   test "encode uint32" do
     t = Proto.Test.Test1.new a: 2147483647
-    p = t |> Proto.Test.Test1.encode |> iodata_to_binary
+    p = t |> Proto.Test.Test1.encode |> IO.iodata_to_binary
     assert p == <<8, 255, 255, 255, 255, 7>>
   end
 
@@ -21,7 +21,7 @@ defmodule TestWrapperTest do
 
   test "encode sint64" do
     t = Proto.Test.Test1.new b: 2147483648
-    p = t |> Proto.Test.Test1.encode |> iodata_to_binary
+    p = t |> Proto.Test.Test1.encode |> IO.iodata_to_binary
     assert p ==   <<16, 128, 128, 128, 128, 16>>
   end
 
@@ -33,7 +33,7 @@ defmodule TestWrapperTest do
   test "encode enum" do
     t = Proto.Test.Test2.new b: Proto.Test.Test2.Foo.bar
     assert t[:b] == Proto.Test.Test2.Foo.bar
-    payload = t |> Proto.Test.Test2.encode |> iodata_to_binary
+    payload = t |> Proto.Test.Test2.encode |> IO.iodata_to_binary
     assert payload == << 8, 150, 1 >>
   end
 
@@ -48,7 +48,7 @@ defmodule TestWrapperTest do
     inner = Proto.Test.Test1.new a: 150
     outer = Proto.Test.Test3.new c: inner
     assert outer[:c][:a] == 150
-    payload = outer |> Proto.Test.Test3.encode |> iodata_to_binary
+    payload = outer |> Proto.Test.Test3.encode |> IO.iodata_to_binary
     assert payload == <<26, 3, 8, 150, 1>>
   end
 
@@ -61,7 +61,7 @@ defmodule TestWrapperTest do
   test "encode repeated message" do
     message = Proto.Test.Test4.new d: [250, 150]
     assert message[:d] == [250, 150]
-    payload = message |> Proto.Test.Test4.encode |> iodata_to_binary
+    payload = message |> Proto.Test.Test4.encode |> IO.iodata_to_binary
     assert payload == << 8, 250, 1, 8, 150, 1 >>
   end
 
@@ -75,7 +75,7 @@ defmodule TestWrapperTest do
     m1 = Proto.Test.Test5.Test6.new f: 150
     m2 = Proto.Test.Test5.Test6.new f: 300
     message = Proto.Test.Test5.new e: [m1, m2]
-    payload = message |> Proto.Test.Test5.encode |> iodata_to_binary
+    payload = message |> Proto.Test.Test5.encode |> IO.iodata_to_binary
     assert payload == << 10, 3, 8, 150, 1, 10, 3, 8, 172, 2 >>
   end
 
@@ -90,7 +90,7 @@ defmodule TestWrapperTest do
   test "encode bool" do
     message = Proto.Test.Test7.new g: true
     assert message[:g] == true
-    payload = message |> Proto.Test.Test7.encode |> iodata_to_binary
+    payload = message |> Proto.Test.Test7.encode |> IO.iodata_to_binary
     assert payload == << 8, 1 >>
   end
 
@@ -106,7 +106,7 @@ defmodule TestWrapperTest do
   test "encode external enum" do
     message = Proto.Test.Test9.new j: Proto.Test.Test2.Foo.bar
     assert message[:j] == { Proto.Test.Test2.Foo, :bar }
-    payload = message |> Proto.Test.Test9.encode |> iodata_to_binary
+    payload = message |> Proto.Test.Test9.encode |> IO.iodata_to_binary
     assert payload == << 8, 150, 1 >>
   end
 
@@ -120,7 +120,7 @@ defmodule TestWrapperTest do
     m = Proto.Test.Test5.Test6.new f: 150
     message = Proto.Test.Test10.new k: m
     assert message[:k][:f] == 150
-    payload = message |> Proto.Test.Test10.encode |> iodata_to_binary
+    payload = message |> Proto.Test.Test10.encode |> IO.iodata_to_binary
     assert payload == << 10, 3, 8, 150, 1 >>
   end
 
@@ -134,7 +134,7 @@ defmodule TestWrapperTest do
     m = Proto.Other.Msg1.new a: 150
     message = Proto.Test.Test11.new l: m
     assert message[:l][:a] == 150
-    payload = message |> Proto.Test.Test11.encode |> iodata_to_binary
+    payload = message |> Proto.Test.Test11.encode |> IO.iodata_to_binary
     assert payload == << 10, 3, 8, 150, 1 >>
   end
 
@@ -148,7 +148,7 @@ defmodule TestWrapperTest do
     m = Proto.Other.Msg1.Msg3.new b: 150
     message = Proto.Test.Test12.new m: m
     assert message[:m][:b] == 150
-    payload = message |> Proto.Test.Test12.encode |> iodata_to_binary
+    payload = message |> Proto.Test.Test12.encode |> IO.iodata_to_binary
     assert payload == << 10, 3, 8, 150, 1 >>
   end
 
@@ -161,7 +161,7 @@ defmodule TestWrapperTest do
   test "missing package header" do
     message = Proto.NoPackage.new a: 150
     assert message[:a] == 150
-    payload = message |> Proto.NoPackage.encode |> iodata_to_binary
+    payload = message |> Proto.NoPackage.encode |> IO.iodata_to_binary
     assert payload == << 8, 150, 1 >>
     message = Proto.NoPackage.decode payload
     assert message[:a] == 150
@@ -176,7 +176,7 @@ defmodule TestWrapperTest do
     message = Proto.Test.Test13.new
     assert message[:n] == 150
     assert message[:o] == 300
-    payload = message |> Proto.Test.Test13.encode |> iodata_to_binary
+    payload = message |> Proto.Test.Test13.encode |> IO.iodata_to_binary
     assert payload == <<>>
   end
 
@@ -194,6 +194,14 @@ defmodule TestWrapperTest do
     assert copy[:o] == 200
   end
 
+  test "get_and update protocol" do
+    inner = Proto.Test.Test1.new a: 150
+    outer = Proto.Test.Test3.new c: inner
+    {val, message1} = get_and_update_in(outer, [:c, :a], &{&1, 5})
+    assert val == 150
+    assert message1[:c][:a] == 5
+  end
+
   test "multi get" do
     m = Proto.Test.Test13.new n: 100, o: 200
     assert [200, 100] == Proto.Test.Test13.get(m, [:o, :n])
@@ -201,7 +209,7 @@ defmodule TestWrapperTest do
   
   test "encode float" do
     t = Proto.Test.Test14.new num: 1.0
-    p = t |> Proto.Test.Test14.encode |> iodata_to_binary
+    p = t |> Proto.Test.Test14.encode |> IO.iodata_to_binary
     assert p == <<13, 0, 0, 128, 63>>
   end
 

@@ -22,7 +22,7 @@ defmodule Exprotoc.Generator do
   defp generate_modules(ast, scope, [module|modules], dir, namespace) do
     { name, _ } = module
     new_scope = [ name | scope ]
-    module_filename = name |> atom_to_binary |> to_module_filename
+    module_filename = name |> Atom.to_string |> to_module_filename
     path = Path.join dir, module_filename
     module_text = generate_module ast, new_scope, module, 0, false, namespace
     File.write path, module_text
@@ -33,7 +33,7 @@ defmodule Exprotoc.Generator do
     fullname = scope |> Enum.reverse |> get_module_name(namespace)
     if sub do
       [name|_] = scope
-      name = atom_to_binary name
+      name = Atom.to_string name
     else
       name = fullname
     end
@@ -72,7 +72,7 @@ defmodule Exprotoc.Generator do
   defp generate_module(ast, scope, module, level, sub, namespace) do
     if sub do
       [name|_] = scope
-      name = atom_to_binary name
+      name = Atom.to_string name
     else
       name = scope |> Enum.reverse |> get_module_name(namespace)
     end
@@ -123,10 +123,10 @@ defmodule Exprotoc.Generator do
 #{i}    Enum.map keys, &( get(msg, &1) )
 #{i}  end
 #{i}  def get(msg, key) when is_atom(key) do
-#{i}      f_num = get_fnum key
-#{i}      do_get(msg.message, f_num)
+#{i}      do_get(msg.message, key)
 #{i}  end
-#{i}  def do_get(m, f_num) do
+#{i}  def do_get(m, key) do
+#{i}    f_num = get_fnum key
 #{i}    if HashDict.has_key?(m, f_num) do
 #{i}      if get_ftype(f_num) == :repeated do
 #{i}        elem m[f_num], 1
@@ -172,14 +172,15 @@ defmodule Exprotoc.Generator do
 #{i}  def do_reduce(_,     _, {:halt, acc}, _fun),   do: {:halted, acc}
 #{i}  def do_reduce(list,  d, {:suspend, acc}, fun), do: {:suspended, acc, &do_reduce(list, d, &1, fun)}
 #{i}  def do_reduce([],    _, {:cont, acc}, _fun),   do: {:done, acc}
-#{i}  def do_reduce([h|t], d, {:cont, acc}, fun) do
-#{i}     key = #{name}.get_fname(h)
-#{i}     do_reduce(t, d, fun.({key, #{name}.do_get(d, h)}, acc), fun)
-#{i}  end
+#{i}  def do_reduce([h|t], d, {:cont, acc}, fun),    do: do_reduce(t, d, fun.(#{name}.do_get(d, h), acc), fun)
 #{i}end
 
 #{i}defimpl Access, for: #{name} do
-#{i}  def access(msg, key), do: #{name}.get(msg, key)
+#{i}  def get(msg, key), do: #{name}.get(msg, key)
+#{i}  def get_and_update(msg, key, update_fun) do
+#{i}   {get, update} = update_fun.(get(msg, key))
+#{i}   {get, #{name}.new(msg, [{key, update}])}
+#{i}  end
 #{i}end
 """
   end
@@ -219,7 +220,7 @@ defmodule Exprotoc.Generator do
   end
 
   defp generate_keystring(keys, i) do
-    keys = Enum.map keys, fn(key) -> ":" <> atom_to_binary(key) end
+    keys = Enum.map keys, fn(key) -> ":" <> Atom.to_string(key) end
     center = Enum.join keys, ", "
     """
 #{i}def get_keys, do: [ #{center} ]
@@ -303,7 +304,7 @@ defmodule Exprotoc.Generator do
   defp type_to_term(ast, scope, type, namespace) when is_list(type) do
     { module, pointer } = Exprotoc.AST.search_ast ast, scope, type
     modulename = "Elixir." <> get_module_name(pointer, namespace)
-             |> binary_to_atom
+             |> String.to_atom
     if elem(module, 0) == :enum do
       { :enum, modulename }
     else
@@ -325,7 +326,7 @@ defmodule Exprotoc.Generator do
 
   defp to_enum_type(name) do
     name
-      |> atom_to_binary
+      |> Atom.to_string
       |> String.downcase
   end
 end
