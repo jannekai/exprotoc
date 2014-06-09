@@ -94,9 +94,6 @@ defmodule Exprotoc.Generator do
 #{i}          type = get_type fnum
 #{i}          value = msg.message[fnum]
 #{i}          if value == nil do
-#{i}            value = get_default fnum
-#{i}          end
-#{i}          if value == nil do
 #{i}            if get_ftype(fnum) == :required do
 #{i}              raise \"Missing field \#{key} in encoding __MODULE__\"
 #{i}            end
