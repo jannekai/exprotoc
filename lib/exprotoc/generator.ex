@@ -123,9 +123,11 @@ defmodule Exprotoc.Generator do
 #{i}    Enum.map keys, &( get(msg, &1) )
 #{i}  end
 #{i}  def get(msg, key) when is_atom(key) do
-#{i}    f_num = get_fnum key
-#{i}    if has_key(msg, key) do
-#{i}      m = msg.message
+#{i}      f_num = get_fnum key
+#{i}      do_get(msg.message, f_num)
+#{i}  end
+#{i}  def do_get(m, f_num) do
+#{i}    if HashDict.has_key?(m, f_num) do
 #{i}      if get_ftype(f_num) == :repeated do
 #{i}        elem m[f_num], 1
 #{i}      else
@@ -161,6 +163,19 @@ defmodule Exprotoc.Generator do
 
 #{i}defimpl Inspect, for: #{name} do
 #{i}  def inspect(msg, opts), do: Exprotoc.Inspect.inspect(#{name}, msg, opts)
+#{i}end
+
+#{i}defimpl Enumerable, for: #{name} do
+#{i}  def count(msg), do: {:ok, Dict.size msg.message}
+#{i}  def member?(msg, key), do: {:ok, #{name}.has_key(msg, key)}
+#{i}  def reduce(%#{name}{message: dict}, acc, fun), do: do_reduce(Dict.keys(dict), dict, acc, fun)
+#{i}  def do_reduce(_,     _, {:halt, acc}, _fun),   do: {:halted, acc}
+#{i}  def do_reduce(list,  d, {:suspend, acc}, fun), do: {:suspended, acc, &do_reduce(list, d, &1, fun)}
+#{i}  def do_reduce([],    _, {:cont, acc}, _fun),   do: {:done, acc}
+#{i}  def do_reduce([h|t], d, {:cont, acc}, fun) do
+#{i}     key = #{name}.get_fname(h)
+#{i}     do_reduce(t, d, fun.({key, #{name}.do_get(d, h)}, acc), fun)
+#{i}  end
 #{i}end
 
 #{i}defimpl Access, for: #{name} do
