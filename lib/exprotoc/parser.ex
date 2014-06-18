@@ -33,7 +33,7 @@ defmodule Exprotoc.Parser do
   end
 
   def parse({file, tokens}) do
-    case :proto_grammar.parse tokens do
+    case :exprotoc_grammar.parse tokens do
       { :ok, ast } ->
         ast
       error ->
