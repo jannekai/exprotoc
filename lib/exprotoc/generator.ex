@@ -95,7 +95,7 @@ defmodule Exprotoc.Generator do
 #{i}          value = msg.message[fnum]
 #{i}          if value == nil do
 #{i}            if get_ftype(fnum) == :required do
-#{i}              raise \"Missing field \#{key} in encoding __MODULE__\"
+#{i}              raise \"Missing field \#{key} when encoding ${__MODULE__}\"
 #{i}            end
 #{i}            acc
 #{i}          else
