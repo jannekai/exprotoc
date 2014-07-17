@@ -172,6 +172,13 @@ defmodule TestWrapperTest do
     assert message[:g] == true
   end
 
+  test "enumerable protocol" do
+    v = Proto.Test.Test13.new(n: 100, o: 2)
+         |> Enum.map(fn({k,v}) -> "#{k}#{v}" end)
+         |> Enum.join
+    assert "o2n100" == v
+  end
+
   test "encode field with defaults" do
     message = Proto.Test.Test13.new
     assert message[:n] == 150

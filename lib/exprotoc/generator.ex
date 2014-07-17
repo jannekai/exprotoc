@@ -172,7 +172,10 @@ defmodule Exprotoc.Generator do
 #{i}  def do_reduce(_,     _, {:halt, acc}, _fun),   do: {:halted, acc}
 #{i}  def do_reduce(list,  d, {:suspend, acc}, fun), do: {:suspended, acc, &do_reduce(list, d, &1, fun)}
 #{i}  def do_reduce([],    _, {:cont, acc}, _fun),   do: {:done, acc}
-#{i}  def do_reduce([h|t], d, {:cont, acc}, fun),    do: do_reduce(t, d, fun.(#{name}.do_get(d, h), acc), fun)
+#{i}  def do_reduce([h|t], d, {:cont, acc}, fun) do
+#{i}    k = #{name}.get_fname(h)
+#{i}    do_reduce(t, d, fun.({k, #{name}.do_get(d, k)}, acc), fun)
+#{i}  end
 #{i}end
 
 #{i}defimpl Access, for: #{name} do
