@@ -87,7 +87,7 @@ defmodule Exprotoc.Generator do
 
     """
 #{i}defmodule #{name} do
-#{i}  @type t :: %#{name}{}
+#{i}  @type t :: %#{name}{message: HashDict.t}
 #{i}  defstruct message: HashDict.new
 #{i}  def encode(msg) do
 #{i}    p = List.foldl get_keys, [], fn(key, acc) ->
@@ -231,7 +231,7 @@ defmodule Exprotoc.Generator do
 """
   end
 
-  defp process_field(ast, scope, { :field, ftype, type, name, fnum, opts } = arg,
+  defp process_field(ast, scope, { :field, ftype, type, name, fnum, opts } = _arg,
                      { acc1, acc2, acc3, acc4, acc5, acc6, acc7 } , i, namespace) do
     type_term = type_to_term ast, scope, type, namespace
     type = type_term_to_string type_term
@@ -286,7 +286,7 @@ defmodule Exprotoc.Generator do
   when type in [:double, :float] do
     generate_default(opts[:default], 0.0)
   end
-  defp do_generate_default_value(type, opts) do
+  defp do_generate_default_value(_type, opts) do
     opts[:default]
   end
   # TODO

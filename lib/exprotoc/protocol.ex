@@ -171,14 +171,14 @@ defmodule Exprotoc.Protocol do
   def wire_type(_), do: :custom
 
   defp cast(value, :int32) do
-    if value &&& 0x80000000 != 0 do
+    if (value &&& 0x80000000) != 0 do
       value - 0x80000000
     else
       value
     end
   end
   defp cast(value, :int64) do
-    if value &&& 0x8000000000000000 != 0 do
+    if (value &&& 0x8000000000000000) != 0 do
       value - 0x8000000000000000
     else
       value
