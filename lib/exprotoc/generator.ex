@@ -87,6 +87,7 @@ defmodule Exprotoc.Generator do
 
     """
 #{i}defmodule #{name} do
+#{i}  @type t :: %#{name}{}
 #{i}  defstruct message: HashDict.new
 #{i}  def encode(msg) do
 #{i}    p = List.foldl get_keys, [], fn(key, acc) ->
