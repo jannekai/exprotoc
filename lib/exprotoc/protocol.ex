@@ -75,13 +75,13 @@ defmodule Exprotoc.Protocol do
     { (data <<< pad) + acc, rest }
   end
 
-  defp pop_64bits(<< value :: [64, unit(1), binary], rest :: binary >>), do: { value, rest }
+  defp pop_64bits(<< value :: 64-unit(1)-binary, rest :: binary >>), do: { value, rest }
 
-  defp pop_32bits(<< value :: [32, unit(1), binary], rest :: binary >>), do: { value, rest }
+  defp pop_32bits(<< value :: 32-unit(1)-binary, rest :: binary >>), do: { value, rest }
 
   defp pop_string(message) do
     { len, message } = pop_varint message
-    << string :: [ size(len), binary ], message :: binary >> = message
+    << string :: size(len)-binary, message :: binary >> = message
     { string, message }
   end
 
@@ -134,7 +134,7 @@ defmodule Exprotoc.Protocol do
     [ encode_varint(len), data ]
   end
   defp encode_value(:float, data) do
-    << data :: [ size(32), float, little ] >>
+    << data :: size(32)-float-little >>
   end
 
   defp encode_varint(data) when data >= 0 do
@@ -196,22 +196,22 @@ defmodule Exprotoc.Protocol do
   defp cast(value, :bytes), do: value
   defp cast(1, :bool), do: true
   defp cast(0, :bool), do: false
-  defp cast(<< value :: [ size(32), little, unsigned, integer ] >>,
+  defp cast(<< value :: size(32)-little-unsigned-integer >>,
             :fixed32), do: value
-  defp cast(<< value :: [ size(32), little, unsigned, integer ] >>,
+  defp cast(<< value :: size(32)-little-unsigned-integer >>,
             :sfixed32) do
     bxor (value >>> 1), -(value &&& 1)
   end
-  defp cast(<< value :: [ size(64), little, unsigned, integer ] >>,
+  defp cast(<< value :: size(64)-little-unsigned-integer >>,
             :fixed64), do: value
-  defp cast(<< value :: [ size(64), little, unsigned, integer ] >>,
+  defp cast(<< value :: size(64)-little-unsigned-integer >>,
             :sfixed64) do
     bxor (value >>> 1), -(value &&& 1)
   end
-  defp cast(<< value :: [ little, float ] >>, :double), do: value
+  defp cast(<< value :: little-float >>, :double), do: value
   defp cast(value, :float) do
     bits = byte_size(value) * 8
-    << float :: [ size(bits), little, float ] >> = value
+    << float :: size(bits)-little-float >> = value
     float
   end
   defp cast(value, { :enum, enum }) do
