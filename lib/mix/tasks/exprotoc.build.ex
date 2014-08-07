@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Exprotoc.Build do
         if File.dir? priv_dir do
           [priv_dir]
         else
-          Mix.raise "at lease one valid PATH must be specified!"
+          []
         end
       _ ->
         paths
@@ -50,6 +50,9 @@ defmodule Mix.Tasks.Exprotoc.Build do
     run(files, paths, prefix)
   end
 
+  def run([], proto_path, prefix) do
+    :ok
+  end
   def run(proto_files, proto_path, prefix) do
     proto_namespace = get_namespace(prefix)
     out_dir = get_output_dir
