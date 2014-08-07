@@ -5,14 +5,17 @@ defmodule TestWrapper.Mixfile do
     [ app: :test_wrapper,
       version: "0.0.1",
       elixir: ">= 0.12.5",
-      compilers: [:exprotoc, :elixir, :app],
-      proto_files: ["nopackage.proto",
-                    "test.proto",
-                    "other.proto",
-                    "another.proto"],
-      proto_path: ["priv"],
-      proto_namespace: "Proto",
-      deps: deps ]
+      deps: deps,
+      aliases: aliases]
+  end
+
+  defp aliases do
+    [compile: ["exprotoc.build --prefix Proto",
+               "compile"],
+     clean: ["clean",
+             "exprotoc.clean"
+            ]
+    ]
   end
 
   # Returns the list of dependencies in the format:
