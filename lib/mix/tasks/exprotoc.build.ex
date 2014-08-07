@@ -2,6 +2,7 @@ defmodule Mix.Tasks.Exprotoc.Build do
   use Mix.Task
 
   @shortdoc "Build .ex files for .proto files"
+  @recursive true
 
   @moduledoc """
   generate .ex files for proto messages into lib/exprotoc
@@ -18,8 +19,8 @@ defmodule Mix.Tasks.Exprotoc.Build do
     * `--prefix` - optional prefix for .ex module definitions
   """
   def run(args) do
-    IO.puts "=> Exprotoc Module Generation"
     Mix.Project.get! # Require the project to be available
+    IO.puts "=> " <> to_string(Mix.Project.config[:app]) <> " Exprotoc Module Generation"
     {opts, paths, _} = OptionParser.parse(args, switches: [file: :keep, prefix: :string])
 
     paths = case paths do
