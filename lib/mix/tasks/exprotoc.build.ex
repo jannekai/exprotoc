@@ -18,35 +18,42 @@ defmodule Mix.Tasks.Exprotoc.Build do
     * `--file`   - file to generate .ex modules for
     * `--prefix` - optional prefix for .ex module definitions
   """
+  def default_paths do
+    priv_dir = Path.expand("priv")
+    if File.dir? priv_dir do
+      [priv_dir]
+    else
+      []
+    end
+  end
+
+  def default_files(paths) do
+    Enum.flat_map(paths, fn(p) -> Path.join(p, "**.proto") |> Path.wildcard end)
+  end
+
+  def default_prefix() do
+    nil
+  end
+
   def run(args) do
+    config = Mix.Project.config
+    exprotoc_config = Dict.get(config, :exprotoc, %{})
+
     Mix.Project.get! # Require the project to be available
-    IO.puts "=> " <> to_string(Mix.Project.config[:app]) <> " Exprotoc Module Generation"
-    {opts, paths, _} = OptionParser.parse(args, switches: [file: :keep, prefix: :string])
+    IO.puts "==> Exprotoc Module Generation: " <> to_string(Mix.Project.config[:app])
+    {override_opts, override_paths, _} = OptionParser.parse(args, switches: [file: :keep, prefix: :string])
 
-    paths = case paths do
-      [] ->
-        priv_dir = Path.expand("priv")
-        IO.puts "defaulting path to " <> Path.relative_to_cwd(priv_dir)
-        if File.dir? priv_dir do
-          [priv_dir]
-        else
-          []
-        end
-      _ ->
-        paths
-    end
+    paths = Enum.find([override_paths, exprotoc_config[:paths]],
+                      default_paths(),
+                      fn(x) -> x != nil && x != [] end)
 
-    files = case Keyword.get_values(opts, :file) do
-      [] ->
-        all = Enum.flat_map(paths, fn(p) -> Path.join(p, "**.proto") |> Path.wildcard end)
-        IO.puts "defaulting files to " <> inspect(Enum.map(all, fn(f) -> Path.relative_to_cwd(f) end))
-        all
-      files ->
-        files
-    end
+    files = Enum.find([Keyword.get_values(override_opts, :file), exprotoc_config[:files]],
+                      default_files(paths),
+                      fn(x) -> x != nil && x != [] end)
 
-    prefix = Dict.get(opts, :prefix)
-
+    prefix = Enum.find([Dict.get(override_opts, :prefix), exprotoc_config[:prefix]],
+                       default_prefix(),
+                       fn(x) -> x != nil end)
     Mix.Task.run "exprotoc.clean"
     run(files, paths, prefix)
   end
