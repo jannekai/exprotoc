@@ -8,3 +8,7 @@ message Msg1 {
     }
     required uint32 a = 1;
 }
+
+message ImportedMsg {
+   optional Another.Msg2 c = 1;
+}

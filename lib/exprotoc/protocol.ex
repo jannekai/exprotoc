@@ -25,7 +25,8 @@ defmodule Exprotoc.Protocol do
     { value, message } = pop_value(wire_type, message)
     field_type = module.get_ftype field_num
     data_type = module.get_type field_num
-    value = cast value, data_type
+    type_module = module.get_module field_num
+    value = cast value, data_type, type_module
     if field_type == :repeated do
       if HashDict.has_key? acc, field_num do
         { :repeated, current } =  acc[field_num]
@@ -170,54 +171,54 @@ defmodule Exprotoc.Protocol do
   def wire_type(:float), do: 5
   def wire_type(_), do: :custom
 
-  defp cast(value, :int32) do
+  defp cast(value, :int32, _) do
     if (value &&& 0x80000000) != 0 do
       value - 0x80000000
     else
       value
     end
   end
-  defp cast(value, :int64) do
+  defp cast(value, :int64, _) do
     if (value &&& 0x8000000000000000) != 0 do
       value - 0x8000000000000000
     else
       value
     end
   end
-  defp cast(value, :uint32), do: value
-  defp cast(value, :uint64), do: value
-  defp cast(value, :sint32) do
+  defp cast(value, :uint32, _), do: value
+  defp cast(value, :uint64, _), do: value
+  defp cast(value, :sint32, _) do
     bxor (value >>> 1), -(value &&& 1)
   end
-  defp cast(value, :sint64) do
+  defp cast(value, :sint64, _) do
     bxor (value >>> 1), -(value &&& 1)
   end
-  defp cast(value, :string), do: value
-  defp cast(value, :bytes), do: value
-  defp cast(1, :bool), do: true
-  defp cast(0, :bool), do: false
+  defp cast(value, :string, _), do: value
+  defp cast(value, :bytes, _), do: value
+  defp cast(1, :bool, _), do: true
+  defp cast(0, :bool, _), do: false
   defp cast(<< value :: size(32)-little-unsigned-integer >>,
-            :fixed32), do: value
+            :fixed32, _), do: value
   defp cast(<< value :: size(32)-little-unsigned-integer >>,
-            :sfixed32) do
+            :sfixed32, _) do
     bxor (value >>> 1), -(value &&& 1)
   end
   defp cast(<< value :: size(64)-little-unsigned-integer >>,
-            :fixed64), do: value
+            :fixed64, _), do: value
   defp cast(<< value :: size(64)-little-unsigned-integer >>,
-            :sfixed64) do
+            :sfixed64, _) do
     bxor (value >>> 1), -(value &&& 1)
   end
-  defp cast(<< value :: little-float >>, :double), do: value
-  defp cast(value, :float) do
+  defp cast(<< value :: little-float >>, :double, _), do: value
+  defp cast(value, :float, _) do
     bits = byte_size(value) * 8
     << float :: size(bits)-little-float >> = value
     float
   end
-  defp cast(value, { :enum, enum }) do
-    enum.to_symbol value
+  defp cast(value, :enum, module) do
+    module.decode value
   end
-  defp cast(value, { :message, module }) do
+  defp cast(value, :message, module) do
     module.decode value
   end
 

@@ -18,10 +18,14 @@ defmodule Exprotoc.AST do
 
   defp generate_import_ast([], _, acc), do: acc
   defp generate_import_ast([ i | imports ], proto_path, acc) do
-    file = find_file i, proto_path
-    { package, _, { enums, messages } } = file |> tokenize(proto_path) |> parse
-    ast = generate_symbols enums, messages, HashDict.new
-    acc = merge_asts { package, ast }, acc
+    acc = case find_file i, proto_path do
+      :error ->
+        acc
+      file ->
+        { package, _, { enums, messages } } = file |> tokenize(proto_path) |> parse
+        ast = generate_symbols enums, messages, HashDict.new
+        acc = merge_asts { package, ast }, acc
+    end
     generate_import_ast imports, proto_path, acc
   end
 
@@ -41,7 +45,8 @@ defmodule Exprotoc.AST do
     module = traverse_ast ast, needle
     if module == nil do
       name = Exprotoc.Generator.get_module_name needle
-      raise "Could not identify symbol for #{name}."
+      # IO.puts "Could not identify symbol for #{name}."
+      {name, needle }
     else
       { module, needle }
     end

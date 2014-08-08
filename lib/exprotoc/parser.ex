@@ -4,6 +4,9 @@ defmodule Exprotoc.Parser do
 
   def tokenize(file, path) do
     file = find_file file, path
+    if file == :error do
+      raise "could not locate target file!"
+    end
     { :ok, text } = File.read file
     { :ok, reg1 } = Regex.compile @multiline_comment
     { :ok, reg2 } = Regex.compile @line_comment
@@ -20,7 +23,8 @@ defmodule Exprotoc.Parser do
     if File.exists? file do
       file
     else
-      raise "Could not locate #{file} in path"
+      IO.puts "Could not locate #{file} in path"
+      :error
     end
   end
   def find_file(file, [ dir | proto_path ]) do

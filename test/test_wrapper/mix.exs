@@ -6,12 +6,15 @@ defmodule TestWrapper.Mixfile do
       version: "0.0.1",
       elixir: ">= 0.12.5",
       deps: deps,
-      exprotoc: [prefix: "Proto"],
+      exprotoc: [prefix: "Proto",
+                 paths: ["priv", "another"]
+                ],
       aliases: aliases]
   end
 
   defp aliases do
-    [compile: ["exprotoc.build",
+    [compile: [
+               "exprotoc.build",
                "compile"],
      clean: ["clean",
              "exprotoc.clean"

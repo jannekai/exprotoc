@@ -15,8 +15,9 @@ defmodule Mix.Tasks.Exprotoc.Build do
 
   ## Command line options
 
-    * `--file`   - file to generate .ex modules for
-    * `--prefix` - optional prefix for .ex module definitions
+    * `--file`     - file to generate .ex modules for
+    * `--prefix`   - optional prefix for .ex module definitions
+    * `--no-clean` - do not remove existing .ex modules before generation
   """
   def default_paths do
     priv_dir = Path.expand("priv")
@@ -41,8 +42,9 @@ defmodule Mix.Tasks.Exprotoc.Build do
 
     Mix.Project.get! # Require the project to be available
     IO.puts "==> Exprotoc Module Generation: " <> to_string(Mix.Project.config[:app])
-    {override_opts, override_paths, _} = OptionParser.parse(args, switches: [file: :keep, prefix: :string])
+    {override_opts, override_paths, _} = OptionParser.parse(args, switches: [file: :keep, prefix: :string, clean: :boolean])
 
+    clean = Dict.get(override_opts, :clean, true)
     paths = Enum.find([override_paths, exprotoc_config[:paths]],
                       default_paths(),
                       fn(x) -> x != nil && x != [] end)
@@ -54,7 +56,9 @@ defmodule Mix.Tasks.Exprotoc.Build do
     prefix = Enum.find([Dict.get(override_opts, :prefix), exprotoc_config[:prefix]],
                        default_prefix(),
                        fn(x) -> x != nil end)
-    Mix.Task.run "exprotoc.clean"
+    if clean do
+      Mix.Task.run "exprotoc.clean"
+    end
     run(files, paths, prefix)
   end
 

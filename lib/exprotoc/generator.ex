@@ -61,6 +61,8 @@ defmodule Exprotoc.Generator do
     """
 #{i}defmodule #{name} do
 #{i}  @type t :: {#{fullname}, #{types}}
+#{i}  def type, do: :enum
+#{i}  def default, do: first
 #{i}  def decode(value), do: to_symbol value
 #{i}  def first(), do: #{first_field}
 #{i}  def to_a({ #{fullname}, atom }), do: atom
@@ -89,10 +91,13 @@ defmodule Exprotoc.Generator do
 #{i}defmodule #{name} do
 #{i}  @type t :: %#{name}{message: HashDict.t}
 #{i}  defstruct message: HashDict.new
+#{i}  def type, do: :message
+#{i}  def default, do: nil
 #{i}  def encode(msg) do
 #{i}    p = List.foldl get_keys, [], fn(key, acc) ->
 #{i}          fnum = get_fnum key
 #{i}          type = get_type fnum
+#{i}          module = get_module fnum
 #{i}          value = msg.message[fnum]
 #{i}          if value == nil do
 #{i}            if get_ftype(fnum) == :required do
@@ -100,6 +105,7 @@ defmodule Exprotoc.Generator do
 #{i}            end
 #{i}            acc
 #{i}          else
+#{i}            type = if module != nil do {type, module} else type end
 #{i}            [ { fnum, { type, value } } | acc ]
 #{i}          end
 #{i}        end
@@ -214,13 +220,13 @@ defmodule Exprotoc.Generator do
 #{i}def get_ftype(-2), do: :repeated
 #{i}def get_ftype(-3), do: :optional
 """
-    acc = { "", "", ftype_acc, "", "", [] , ""}
-    { acc1, acc2, acc3, acc4, acc5, acc6, acc7 } =
+    acc = { "", "", ftype_acc, "", "", [] , "", ""}
+    { acc1, acc2, acc3, acc4, acc5, acc6, acc7, acc8 } =
       List.foldl fields, acc,
            &process_field(ast, scope, &1, &2, i, namespace)
     acc5 = acc5 <> "#{i}def get_default(_), do: nil\n"
     key_string = generate_keystring acc6, i
-    acc1 <> acc2 <> acc7 <>  acc3 <> acc4 <> acc5 <> key_string
+    acc1 <> acc2 <> acc7 <>  acc3 <> acc4 <> acc5 <> acc8 <> key_string
   end
 
   defp generate_keystring(keys, i) do
@@ -232,9 +238,10 @@ defmodule Exprotoc.Generator do
   end
 
   defp process_field(ast, scope, { :field, ftype, type, name, fnum, opts } = _arg,
-                     { acc1, acc2, acc3, acc4, acc5, acc6, acc7 } , i, namespace) do
+                     { acc1, acc2, acc3, acc4, acc5, acc6, acc7, acc8 } , i, namespace) do
     type_term = type_to_term ast, scope, type, namespace
     type = type_term_to_string type_term
+    type_module = type_module(type_term)
     if ftype == :repeated do
       acc1 = acc1 <> """
 #{i}defp put_key(msg, #{fnum}, []) do
@@ -256,11 +263,17 @@ defmodule Exprotoc.Generator do
     acc4 = acc4 <> "#{i}def get_type(#{fnum}), do: #{type}\n"
     acc5 = acc5 <> generate_default_value(i, fnum, type_term, opts)
     acc7 = acc7 <> "#{i}def get_fname(#{fnum}), do: :#{name}\n"
-    { acc1, acc2, acc3, acc4, acc5, [ name | acc6 ], acc7}
+    acc8 = acc8 <> "#{i}def get_module(#{fnum}), do: #{type_module}\n"
+    { acc1, acc2, acc3, acc4, acc5, [ name | acc6 ], acc7, acc8}
   end
 
   defp generate_default_value(i, fnum, type, opts) do
-    default = do_generate_default_value type, opts
+    default =
+      if Exprotoc.Protocol.wire_type(type) == :custom do
+        do_generate_custom_default_value type, opts
+      else
+        do_generate_primative_default_value type, opts
+    end
     if default != nil do
       "#{i}def get_default(#{fnum}), do: #{default}\n"
     else
@@ -268,25 +281,30 @@ defmodule Exprotoc.Generator do
     end
   end
 
-  defp do_generate_default_value(:bool, opts) do
+  defp do_generate_custom_default_value(name, opts) do
+    if opts[:default] != nil do
+      Kernel.inspect(name) <> "." <> to_enum_type(opts[:default])
+    else
+      Kernel.inspect(name) <> "." <> "default"
+    end
+  end
+
+  defp do_generate_primative_default_value(:bool, opts) do
     generate_default(opts[:default], false)
   end
-  defp do_generate_default_value({:enum, name}, opts) do
-    Kernel.inspect(name) <> "." <> to_enum_type(generate_default(opts[:default], :first))
-  end
-  defp do_generate_default_value(:string, opts) do
+  defp do_generate_primative_default_value(:string, opts) do
     generate_default(opts[:default], "\"\"")
   end
-  defp do_generate_default_value(type, opts)
+  defp do_generate_primative_default_value(type, opts)
   when type in [:int32, :int64, :uint32, :uint64, :sint32,
                 :sint64, :fixed32, :fixed64, :sfixed32, :sfixed64] do
     generate_default(opts[:default], 0)
   end
-  defp do_generate_default_value(type, opts)
+  defp do_generate_primative_default_value(type, opts)
   when type in [:double, :float] do
     generate_default(opts[:default], 0.0)
   end
-  defp do_generate_default_value(_type, opts) do
+  defp do_generate_primative_default_value(_type, opts) do
     opts[:default]
   end
   # TODO
@@ -302,18 +320,26 @@ defmodule Exprotoc.Generator do
   defp indent(level), do: String.duplicate("  ", level)
 
   defp type_term_to_string(term) do
+    if Exprotoc.Protocol.wire_type(term) == :custom do
+      (term |> Kernel.inspect) <> ".type()"
+    else
       Kernel.inspect term
+    end
+  end
+
+  def type_module(term) do
+    if Exprotoc.Protocol.wire_type(term) == :custom do
+      term
+    else
+      "nil"
+    end
   end
 
   defp type_to_term(ast, scope, type, namespace) when is_list(type) do
     { module, pointer } = Exprotoc.AST.search_ast ast, scope, type
-    modulename = "Elixir." <> get_module_name(pointer, namespace)
+    type = "Elixir." <> get_module_name(pointer, namespace)
              |> String.to_atom
-    if elem(module, 0) == :enum do
-      { :enum, modulename }
-    else
-      { :message, modulename }
-    end
+    type
   end
   defp type_to_term(ast, scope, type, namespace) do
     if Exprotoc.Protocol.wire_type(type) == :custom do
