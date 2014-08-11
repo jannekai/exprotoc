@@ -220,7 +220,11 @@ defmodule Exprotoc.Generator do
 #{i}def get_ftype(-2), do: :repeated
 #{i}def get_ftype(-3), do: :optional
 """
-    acc = { "", "", ftype_acc, "", "", [] , "", ""}
+    get_module_acc = """
+#{i}def get_module(-1), do: __MODULE__
+#{i}def get_module(-2), do: nil
+"""
+    acc = { "", "", ftype_acc, "", "", [] , "", get_module_acc}
     { acc1, acc2, acc3, acc4, acc5, acc6, acc7, acc8 } =
       List.foldl fields, acc,
            &process_field(ast, scope, &1, &2, i, namespace)
