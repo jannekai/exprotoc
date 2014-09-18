@@ -84,7 +84,7 @@ defmodule Exprotoc.AST do
   end
 
   defp add_enum({ :enum, enum, enum_data }, symbol_tree) do
-    if nil? symbol_tree[enum] do
+    if is_nil symbol_tree[enum] do
       symbol_tree = HashDict.put symbol_tree, enum, { :enum, enum_data }
     else
       raise "Duplicate symbol for enum #{enum}."
@@ -94,7 +94,7 @@ defmodule Exprotoc.AST do
 
   defp add_message({ :message, message, { enums, messages, fields } },
                    symbol_tree) do
-    if nil? symbol_tree[message] do
+    if is_nil symbol_tree[message] do
       subtree = HashDict.new
       subtree = generate_symbols(enums, messages, subtree)
       symbol_tree = HashDict.put symbol_tree, message, {fields, subtree}
