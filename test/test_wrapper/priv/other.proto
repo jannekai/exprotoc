@@ -12,3 +12,7 @@ message Msg1 {
 message ImportedMsg {
    optional Another.Msg2 c = 1;
 }
+
+message MyMessage {
+   optional sint32 b = 16;
+}

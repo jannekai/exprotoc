@@ -1,6 +1,13 @@
 defmodule TestWrapperTest do
   use ExUnit.Case
 
+  test "test encode field 16 boundry" do
+    start = Proto.Other.MyMessage.new(b: 1)
+    bin = Proto.Other.MyMessage.encode(start) |> IO.iodata_to_binary
+    last = Proto.Other.MyMessage.decode bin
+    assert start == last
+  end
+
   test "access uint32" do
     t = Proto.Test.Test1.new a: 3
     assert t[:a] == 3

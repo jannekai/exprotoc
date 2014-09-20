@@ -98,7 +98,7 @@ defmodule Exprotoc.Protocol do
   end
   defp encode_value(field_num, type, data) do
     key = (field_num <<< 3) ||| wire_type(type)
-    [ key, encode_value(type, data) ]
+    [ encode_varint(key), encode_value(type, data) ]
   end
 
   defp encode_value(:int32, data) when data < 0 do
