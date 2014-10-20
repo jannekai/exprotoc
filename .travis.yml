@@ -1,13 +1,16 @@
 language: erlang
-before_install:
- - git clone https://github.com/elixir-lang/elixir
- - cd elixir
- - git checkout v1.0.0
- - cd ..
- - make -C elixir
-before_script: "export PATH=`pwd`/elixir/bin:$PATH && mix local.hex --force"
-script: cd test/test_wrapper && mix test
-recipients:
-  - joconnor@quarkgames.com
 otp_release:
   - 17.3
+env:
+  - ELIXIR_VERSION=1.0.0
+before_install:
+  - wget https://github.com/elixir-lang/elixir/releases/download/v$ELIXIR_VERSION/Precompiled.zip
+  - unzip -d elixir Precompiled.zip
+before_script:
+  - export PATH=`pwd`/elixir/bin:$PATH
+  - mix local.hex --force
+  - mix deps.get
+script:
+  - cd test/test_wrapper && mix test
+recipients:
+  - joconnor@quarkgames.com
