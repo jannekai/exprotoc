@@ -37,6 +37,20 @@ defmodule TestWrapperTest do
     assert t[:b] == 2147483648
   end
 
+  test "encode int32" do
+    t = Proto.Test.Test15.new i32: 1
+    p = t |> Proto.Test.Test15.encode |> IO.iodata_to_binary
+    assert p == <<8, 1>>
+
+    t = Proto.Test.Test15.new i32: 0
+    p = t |> Proto.Test.Test15.encode |> IO.iodata_to_binary
+    assert p == <<8, 0>>
+
+    t = Proto.Test.Test15.new i32: -1
+    p = t |> Proto.Test.Test15.encode |> IO.iodata_to_binary
+    assert p == <<8, 255, 255, 255, 255, 15>>
+  end
+
   test "encode enum" do
     t = Proto.Test.Test2.new b: Proto.Test.Test2.Foo.bar
     assert t[:b] == Proto.Test.Test2.Foo.bar
@@ -220,7 +234,7 @@ defmodule TestWrapperTest do
     m = Proto.Test.Test13.new n: 100, o: 200
     assert [200, 100] == Proto.Test.Test13.get(m, [:o, :n])
   end
-  
+
   test "encode float" do
     t = Proto.Test.Test14.new num: 1.0
     p = t |> Proto.Test.Test14.encode |> IO.iodata_to_binary

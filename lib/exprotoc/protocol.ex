@@ -47,13 +47,11 @@ defmodule Exprotoc.Protocol do
   end
 
   defp encode_message([], acc), do: acc
-  defp encode_message([ { field_num, { type, { :repeated, values } } } | rest ],
-                      acc) do
+  defp encode_message([ { field_num, { type, { :repeated, values } } } | rest ], acc) do
     payload = Enum.map values, &encode_value(field_num, type, &1)
     encode_message rest, [ payload | acc ]
   end
-  defp encode_message([ { field_num, { type, value } } | rest ],
-                      acc) do
+  defp encode_message([ { field_num, { type, value } } | rest ], acc) do
     payload = encode_value field_num, type, value
     encode_message rest, [ payload | acc ]
   end
@@ -67,12 +65,10 @@ defmodule Exprotoc.Protocol do
   defp pop_varint(message) do
     pop_varint(message, 0, 0)
   end
-  defp pop_varint(<< 1 :: 1, data :: 7, rest :: binary >>,
-                  acc, pad) do
+  defp pop_varint(<< 1 :: 1, data :: 7, rest :: binary >>, acc, pad) do
     pop_varint rest, (data <<< pad) + acc, pad + 7
   end
-  defp pop_varint(<< 0 :: 1, data:: 7, rest :: binary >>,
-                  acc, pad) do
+  defp pop_varint(<< 0 :: 1, data:: 7, rest :: binary >>, acc, pad) do
     { (data <<< pad) + acc, rest }
   end
 
@@ -115,15 +111,11 @@ defmodule Exprotoc.Protocol do
   end
   defp encode_value(:uint32, data), do: encode_varint(data)
   defp encode_value(:uint64, data), do: encode_varint(data)
-  defp encode_value(:sint32, data)
-  when data < 0x80000000
-  when data >= -0x7fffffff do
+  defp encode_value(:sint32, data) when data < 0x80000000 when data >= -0x7fffffff do
     int = bxor (data <<< 1), (data >>> 31)
     encode_varint int
   end
-  defp encode_value(:sint64, data)
-  when data < 0x8000000000000000
-  when data >= -0x7fffffffffffffff do
+  defp encode_value(:sint64, data) when data < 0x8000000000000000 when data >= -0x7fffffffffffffff do
     int = bxor (data <<< 1), (data >>> 63)
     encode_varint int
   end
@@ -173,14 +165,14 @@ defmodule Exprotoc.Protocol do
 
   defp cast(value, :int32, _) do
     if (value &&& 0x80000000) != 0 do
-      value - 0x80000000
+      value - (1 <<< 32)
     else
       value
     end
   end
   defp cast(value, :int64, _) do
     if (value &&& 0x8000000000000000) != 0 do
-      value - 0x8000000000000000
+      value - (1 <<< 64)
     else
       value
     end
@@ -197,16 +189,12 @@ defmodule Exprotoc.Protocol do
   defp cast(value, :bytes, _), do: value
   defp cast(1, :bool, _), do: true
   defp cast(0, :bool, _), do: false
-  defp cast(<< value :: size(32)-little-unsigned-integer >>,
-            :fixed32, _), do: value
-  defp cast(<< value :: size(32)-little-unsigned-integer >>,
-            :sfixed32, _) do
+  defp cast(<< value :: size(32)-little-unsigned-integer >>, :fixed32, _), do: value
+  defp cast(<< value :: size(32)-little-unsigned-integer >>, :sfixed32, _) do
     bxor (value >>> 1), -(value &&& 1)
   end
-  defp cast(<< value :: size(64)-little-unsigned-integer >>,
-            :fixed64, _), do: value
-  defp cast(<< value :: size(64)-little-unsigned-integer >>,
-            :sfixed64, _) do
+  defp cast(<< value :: size(64)-little-unsigned-integer >>, :fixed64, _), do: value
+  defp cast(<< value :: size(64)-little-unsigned-integer >>, :sfixed64, _) do
     bxor (value >>> 1), -(value &&& 1)
   end
   defp cast(<< value :: little-float >>, :double, _), do: value
