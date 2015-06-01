@@ -165,14 +165,14 @@ defmodule Exprotoc.Protocol do
 
   defp cast(value, :int32, _) do
     if (value &&& 0x80000000) != 0 do
-      value - (1 <<< 32)
+      (value  &&& 0xFFFFFFFF) - (1 <<< 32)
     else
       value
     end
   end
   defp cast(value, :int64, _) do
     if (value &&& 0x8000000000000000) != 0 do
-      value - (1 <<< 64)
+      (value  &&& 0xFFFFFFFFFFFFFFFF) - (1 <<< 64)
     else
       value
     end
