@@ -4,3 +4,4 @@ erl_crash.dump
 *.ez
 exprotoc_grammar.erl
 test/test_wrapper/lib
+exprotoc.sublime-workspace
