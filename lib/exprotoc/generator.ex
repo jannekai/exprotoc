@@ -249,7 +249,7 @@ defmodule Exprotoc.Generator do
     if ftype == :repeated do
       acc1 = acc1 <> """
 #{i}defp put_key(msg, #{fnum}, []) do
-#{i}  HashDict.delete msg, #{f_num}
+#{i}  HashDict.delete msg, #{fnum}
 #{i}end
 #{i}defp put_key(msg, #{fnum}, values) when is_list(values) do
 #{i}  HashDict.put msg, #{fnum}, { :repeated, values }
