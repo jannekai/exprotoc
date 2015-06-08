@@ -3,7 +3,7 @@ defmodule Exprotoc.Mixfile do
 
   def project do
     [ app: :exprotoc,
-      version: "0.0.1",
+      version: "0.0.2",
       elixir: "~> 1.0.0",
       compilers: [ :yecc, :erlang, :elixir, :app ],
       deps: deps ]
