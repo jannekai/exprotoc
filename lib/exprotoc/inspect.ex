@@ -3,7 +3,7 @@ defmodule Exprotoc.Inspect do
 
   def inspect(module, msg, opts) do
     concat [to_doc(module, opts), "[",
-            to_doc(msg.message, opts),
+    # to_doc(msg.message, opts),
     #Enum.reduce(msg.message, empty,
     #            fn({k, v}, acc) ->
     #                inspect_field(module, k, v, acc, opts)
